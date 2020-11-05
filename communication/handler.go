@@ -8,7 +8,6 @@ import (
 	protoLoadBalancer "github.com/kulycloud/protocol/load-balancer"
 )
 
-
 var _ protoLoadBalancer.LoadBalancerServer = &LoadBalancerHandler{}
 
 var logger = logging.GetForComponent("handler")
@@ -25,10 +24,7 @@ func (handler *LoadBalancerHandler) Register(listener *commonCommunication.Liste
 	protoLoadBalancer.RegisterLoadBalancerServer(listener.Server, handler)
 }
 
-func (LoadBalancerHandler) AddEndpoint(context.Context, *protoCommon.Endpoint) (*protoCommon.Empty, error) {
-	return &protoCommon.Empty{}, nil
-}
-
-func (LoadBalancerHandler) RemoveEndpoint(context.Context, *protoCommon.Endpoint) (*protoCommon.Empty, error) {
+func (handler *LoadBalancerHandler) SetEndpoints(ctx context.Context, endpoints *protoCommon.EndpointList) (*protoCommon.Empty, error) {
+	logger.Infow("Got endpoints", "endpoints", endpoints.Endpoints)
 	return &protoCommon.Empty{}, nil
 }
