@@ -40,6 +40,8 @@ func main() {
 
 	Storage = listener.Storage
 
+	communication.InitConnectionCache()
+
 	srv := commonHttp.NewServer(config.GlobalConfig.HttpPort, handleFunc)
 	err = srv.Serve()
 	if err != nil {

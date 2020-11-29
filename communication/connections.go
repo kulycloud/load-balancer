@@ -13,7 +13,16 @@ import (
 
 var ErrNoValidCommunicator = errors.New("no valid communicator found")
 
-var globalConnectionCache = &connectionCache{}
+var globalConnectionCache *connectionCache
+
+func InitConnectionCache() {
+	globalConnectionCache = &connectionCache{}
+	go func() {
+		for {
+			globalConnectionCache.update()
+		}
+	}()
+}
 
 // if route revisions are added this can be used
 // in a map of revisions
