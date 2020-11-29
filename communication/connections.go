@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kulycloud/load-balancer/config"
+
 	commonHttp "github.com/kulycloud/common/http"
 	protoCommon "github.com/kulycloud/protocol/common"
 )
@@ -20,6 +22,7 @@ func InitConnectionCache() {
 	go func() {
 		for {
 			globalConnectionCache.update()
+			time.Sleep(time.Duration(config.GlobalConfig.UpdateTimeout) * time.Second)
 		}
 	}()
 }
@@ -29,6 +32,8 @@ func InitConnectionCache() {
 // connections contains entries for valid connections
 // sorted by certain criteria (e.g. response time)
 // connections[0] -> the best
+// invalid endpoints contains endpoint for which
+// no valid connection could be created
 type connectionCache struct {
 	mutex            sync.Mutex
 	connections      []*connection
@@ -97,7 +102,7 @@ func (cc *connectionCache) Less(i, j int) bool {
 	return cc.connections[i].responseTime < cc.connections[j].responseTime
 }
 
-func (cc *connectionCache) setNewEndpoints(endpoints []*protoCommon.Endpoint) error {
+func (cc *connectionCache) setEndpoints(endpoints []*protoCommon.Endpoint) error {
 	connections, invalidEndpoints := createConnections(endpoints)
 	if len(connections) < 1 {
 		return ErrNoValidCommunicator
