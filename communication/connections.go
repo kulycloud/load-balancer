@@ -181,8 +181,9 @@ func createConnections(endpoints []*protoCommon.Endpoint) ([]*connection, []*pro
 		connection, err := newConnection(endpoint)
 		if err != nil {
 			invalidEndpoints = append(invalidEndpoints, endpoint)
+		} else {
+			connections = append(connections, connection)
 		}
-		connections = append(connections, connection)
 	}
 
 	return connections, invalidEndpoints

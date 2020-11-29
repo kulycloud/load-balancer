@@ -56,18 +56,21 @@ func handleFunc(request *commonHttp.Request) *commonHttp.Response {
 	if Storage.Ready() {
 		step, err := Storage.GetRouteStepByUID(ctx, request.KulyData.RouteUid, request.KulyData.StepUid)
 		if err != nil {
-			logger.Errorw("could not get next step", "error", err)
+			logger.Warnw("could not get next step", "error", err)
 			res.Status = 400
 			return res
 		}
 		request.KulyData.Step = step
 		res, err = communication.ProcessRequest(ctx, request)
 		if err != nil {
-			logger.Errorw("could not process request", "error", err)
+			logger.Warnw("could not process request", "error", err)
 			res.Status = 500
 			return res
 		}
+		logger.Debugw("request processed", "request", request, "response", res)
+		return res
 	}
+	logger.Warn("Storage not ready")
 	res.Status = 500
 	return res
 }
