@@ -5,7 +5,8 @@ import (
 )
 
 type Config struct {
-	Port uint32 `configName:"port"`
+	Port     uint32 `configName:"port"`
+	HttpPort uint32 `configName:"httpPort"`
 }
 
 var GlobalConfig = &Config{}
