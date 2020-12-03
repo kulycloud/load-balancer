@@ -95,14 +95,10 @@ func (cc *connectionCache) processRequest(ctx context.Context, request *commonHt
 }
 
 // create connections for new set of endpoints
-// if at least 1 valid connection can be created
-// then flush cache and add new connections
-// and new set of invalidEndpoints
-// otherwise keep old connections and return error
 func (cc *connectionCache) setEndpoints(endpoints []*protoCommon.Endpoint) error {
 	connections, invalidEndpoints := createConnections(endpoints)
 	if len(connections) < 1 {
-		return ErrNoValidCommunicator
+		logger.Errorw("load balancer will not function properly", "error", ErrNoValidCommunicator)
 	}
 
 	cc.mutex.Lock()
@@ -116,59 +112,22 @@ func (cc *connectionCache) setEndpoints(endpoints []*protoCommon.Endpoint) error
 
 // update cache
 func (cc *connectionCache) update() {
+	newConnections, oldInvalidEndpoints := createConnections(cc.invalidEndpoints)
+	oldConnections, newInvalidEndpoints := validateConnections(cc.connections)
+
+	connections := append(oldConnections, newConnections...)
+	invalidEndpoints := append(oldInvalidEndpoints, newInvalidEndpoints...)
+
+	if len(cc.connections) < 1 {
+		logger.Errorw("load balancer will not function properly", "error", ErrNoValidCommunicator)
+	}
+
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	cc.updateInvalidEndpoints()
-	cc.updateConnections()
+	cc.connections = connections
+	cc.invalidEndpoints = invalidEndpoints
 	sort.Sort(cc)
-}
-
-// tries to create connections for previously
-// invalid endpoints
-// if successful, adds connection to connections
-// and removes endpoint from invalidEndpoints
-func (cc *connectionCache) updateInvalidEndpoints() {
-	newInvalidEndpoints := make([]*protoCommon.Endpoint, 0, len(cc.invalidEndpoints))
-	for _, endpoint := range cc.invalidEndpoints {
-		connection, err := newConnection(endpoint)
-		if err == nil {
-			cc.connections = append(cc.connections, connection)
-		} else {
-			newInvalidEndpoints = append(newInvalidEndpoints, endpoint)
-		}
-	}
-	cc.invalidEndpoints = newInvalidEndpoints
-}
-
-// updates previously valid connections
-// if update not successful then remove from
-// connections and add endpoint to invalidEndpoints
-func (cc *connectionCache) updateConnections() {
-	newConnections := make([]*connection, 0, len(cc.connections))
-	for _, connection := range cc.connections {
-		err := connection.update()
-		if err == nil {
-			newConnections = append(newConnections, connection)
-		} else {
-			cc.invalidEndpoints = append(cc.invalidEndpoints, connection.endpoint)
-		}
-	}
-	cc.connections = newConnections
-}
-
-// sorting
-// the connections will be sorted based on certain
-// criteria. for that connectionCache implements the
-// Sortable interface
-func (cc *connectionCache) Len() int {
-	return len(cc.connections)
-}
-func (cc *connectionCache) Swap(i, j int) {
-	cc.connections[i], cc.connections[j] = cc.connections[j], cc.connections[i]
-}
-func (cc *connectionCache) Less(i, j int) bool {
-	return cc.connections[i].responseTime < cc.connections[j].responseTime
 }
 
 // creates connections for every possible endpoint
@@ -187,4 +146,36 @@ func createConnections(endpoints []*protoCommon.Endpoint) ([]*connection, []*pro
 	}
 
 	return connections, invalidEndpoints
+}
+
+// checks if provided connections are valid
+// return slice of valid connection and slice of invalid endpoints
+func validateConnections(connections []*connection) ([]*connection, []*protoCommon.Endpoint) {
+	validConnections := make([]*connection, 0, len(connections))
+	invalidEndpoints := make([]*protoCommon.Endpoint, 0)
+
+	for _, connection := range connections {
+		err := connection.update()
+		if err != nil {
+			invalidEndpoints = append(invalidEndpoints, connection.endpoint)
+		} else {
+			validConnections = append(validConnections, connection)
+		}
+	}
+
+	return validConnections, invalidEndpoints
+}
+
+// sorting
+// the connections will be sorted based on certain
+// criteria. for that connectionCache implements the
+// Sortable interface
+func (cc *connectionCache) Len() int {
+	return len(cc.connections)
+}
+func (cc *connectionCache) Swap(i, j int) {
+	cc.connections[i], cc.connections[j] = cc.connections[j], cc.connections[i]
+}
+func (cc *connectionCache) Less(i, j int) bool {
+	return cc.connections[i].responseTime < cc.connections[j].responseTime
 }
