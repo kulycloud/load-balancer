@@ -27,7 +27,7 @@ func (handler *LoadBalancerHandler) Register(listener *commonCommunication.Liste
 func (handler *LoadBalancerHandler) SetEndpoints(ctx context.Context, endpoints *protoCommon.EndpointList) (*protoCommon.Empty, error) {
 	logger.Infow("Got endpoints", "endpoints", endpoints.Endpoints)
 
-	err := globalConnectionCache.setEndpoints(endpoints.Endpoints)
+	err := globalConnectionCache.setEndpoints(ctx, endpoints.Endpoints)
 
 	return &protoCommon.Empty{}, err
 }

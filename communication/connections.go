@@ -13,16 +13,22 @@ import (
 	protoCommon "github.com/kulycloud/protocol/common"
 )
 
-var ErrNoValidCommunicator = errors.New("no valid communicator found")
+var ErrNoValidCommunicator = errors.New("no valid communicator")
 
 var globalConnectionCache *connectionCache
 
-func InitConnectionCache() {
+func InitConnectionCache(ctx context.Context) {
 	globalConnectionCache = &connectionCache{}
 	go func() {
+	cacheUpdateLoop:
 		for {
-			globalConnectionCache.update()
-			time.Sleep(time.Duration(config.GlobalConfig.UpdateTimeout) * time.Second)
+			select {
+			case <-ctx.Done():
+				break cacheUpdateLoop
+			default:
+				globalConnectionCache.update(ctx)
+				time.Sleep(time.Duration(config.GlobalConfig.UpdateTimeout) * time.Second)
+			}
 		}
 	}()
 }
@@ -56,8 +62,8 @@ type connection struct {
 }
 
 // create valid connection if possible
-func newConnection(endpoint *protoCommon.Endpoint) (*connection, error) {
-	com, err := commonHttp.NewCommunicatorFromEndpoint(endpoint)
+func newConnection(ctx context.Context, endpoint *protoCommon.Endpoint) (*connection, error) {
+	com, err := commonHttp.NewCommunicatorFromEndpoint(ctx, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +71,14 @@ func newConnection(endpoint *protoCommon.Endpoint) (*connection, error) {
 		endpoint:     endpoint,
 		communicator: com,
 	}
-	err = connection.update()
+	err = connection.update(ctx)
 	return connection, err
 }
 
 // update evaluation criteria values (e.g. response time)
-func (con *connection) update() error {
+func (con *connection) update(ctx context.Context) error {
 	start := time.Now()
-	err := con.communicator.Ping(context.Background())
+	err := con.communicator.Ping(ctx)
 	duration := (int64)(time.Since(start))
 	con.responseTime = duration
 	return err
@@ -95,8 +101,8 @@ func (cc *connectionCache) processRequest(ctx context.Context, request *commonHt
 }
 
 // create connections for new set of endpoints
-func (cc *connectionCache) setEndpoints(endpoints []*protoCommon.Endpoint) error {
-	connections, invalidEndpoints := createConnections(endpoints)
+func (cc *connectionCache) setEndpoints(ctx context.Context, endpoints []*protoCommon.Endpoint) error {
+	connections, invalidEndpoints := createConnections(ctx, endpoints)
 	if len(connections) < 1 {
 		logger.Errorw("load balancer will not function properly", "error", ErrNoValidCommunicator)
 	}
@@ -111,9 +117,9 @@ func (cc *connectionCache) setEndpoints(endpoints []*protoCommon.Endpoint) error
 }
 
 // update cache
-func (cc *connectionCache) update() {
-	newConnections, oldInvalidEndpoints := createConnections(cc.invalidEndpoints)
-	oldConnections, newInvalidEndpoints := validateConnections(cc.connections)
+func (cc *connectionCache) update(ctx context.Context) {
+	newConnections, oldInvalidEndpoints := createConnections(ctx, cc.invalidEndpoints)
+	oldConnections, newInvalidEndpoints := validateConnections(ctx, cc.connections)
 
 	connections := append(oldConnections, newConnections...)
 	invalidEndpoints := append(oldInvalidEndpoints, newInvalidEndpoints...)
@@ -132,12 +138,12 @@ func (cc *connectionCache) update() {
 
 // creates connections for every possible endpoint
 // invalid endpoints are returned separatly
-func createConnections(endpoints []*protoCommon.Endpoint) ([]*connection, []*protoCommon.Endpoint) {
+func createConnections(ctx context.Context, endpoints []*protoCommon.Endpoint) ([]*connection, []*protoCommon.Endpoint) {
 	connections := make([]*connection, 0, len(endpoints))
 	invalidEndpoints := make([]*protoCommon.Endpoint, 0)
 
 	for _, endpoint := range endpoints {
-		connection, err := newConnection(endpoint)
+		connection, err := newConnection(ctx, endpoint)
 		if err != nil {
 			invalidEndpoints = append(invalidEndpoints, endpoint)
 		} else {
@@ -150,12 +156,12 @@ func createConnections(endpoints []*protoCommon.Endpoint) ([]*connection, []*pro
 
 // checks if provided connections are valid
 // return slice of valid connection and slice of invalid endpoints
-func validateConnections(connections []*connection) ([]*connection, []*protoCommon.Endpoint) {
+func validateConnections(ctx context.Context, connections []*connection) ([]*connection, []*protoCommon.Endpoint) {
 	validConnections := make([]*connection, 0, len(connections))
 	invalidEndpoints := make([]*protoCommon.Endpoint, 0)
 
 	for _, connection := range connections {
-		err := connection.update()
+		err := connection.update(ctx)
 		if err != nil {
 			invalidEndpoints = append(invalidEndpoints, connection.endpoint)
 		} else {

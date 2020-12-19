@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-
 	commonCommunication "github.com/kulycloud/common/communication"
 	commonHttp "github.com/kulycloud/common/http"
 	"github.com/kulycloud/common/logging"
@@ -40,19 +39,20 @@ func main() {
 
 	Storage = listener.Storage
 
-	communication.InitConnectionCache()
+	communication.InitConnectionCache(context.Background())
 
-	srv := commonHttp.NewServer(config.GlobalConfig.HttpPort, handleFunc)
+	srv, err := commonHttp.NewServer(config.GlobalConfig.HttpPort, handleFunc)
+	if err != nil {
+		logger.Panicw("error creating http server", "error", err)
+	}
 	err = srv.Serve()
 	if err != nil {
 		logger.Panicw("error serving http server", "error", err)
 	}
 }
 
-func handleFunc(request *commonHttp.Request) *commonHttp.Response {
+func handleFunc(ctx context.Context, request *commonHttp.Request) *commonHttp.Response {
 	res := commonHttp.NewResponse()
-	// could be replaced with a more sensible context later on
-	ctx := context.Background()
 	if Storage.Ready() {
 		step, err := Storage.GetRouteStepByUID(ctx, request.KulyData.RouteUid, request.KulyData.StepUid)
 		if err != nil {
