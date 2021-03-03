@@ -54,7 +54,7 @@ func main() {
 func handleFunc(ctx context.Context, request *commonHttp.Request) *commonHttp.Response {
 	var res *commonHttp.Response
 	if Storage.Ready() {
-		step, err := Storage.GetRouteStepByUID(ctx, request.KulyData.RouteUid, request.KulyData.StepUid)
+		step, err := Storage.GetPopulatedRouteStepByUID(ctx, request.KulyData.RouteUid, request.KulyData.StepUid)
 		if err != nil {
 			logger.Warnw("could not get next step", "error", err)
 			res = commonHttp.NewResponse()
