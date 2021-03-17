@@ -37,7 +37,7 @@ func main() {
 		}
 	}()
 
-	Storage = listener.Storage
+	Storage = handler.Storage
 
 	communication.InitConnectionCache(context.Background())
 
