@@ -32,12 +32,12 @@ func main() {
 	handler.Register(listener)
 
 	go func() {
-		if err = listener.Serve(); err != nil {
+		if err = <-listener.Serve(); err != nil {
 			logger.Panicw("error serving listener", "error", err)
 		}
 	}()
 
-	Storage = listener.Storage
+	Storage = handler.Storage
 
 	communication.InitConnectionCache(context.Background())
 
