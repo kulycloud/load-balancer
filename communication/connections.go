@@ -46,7 +46,7 @@ func ProcessRequest(ctx context.Context, request *commonHttp.Request) (*commonHt
 // invalid endpoints contains endpoint for which
 // no valid connection could be created
 type connectionCache struct {
-	mutex            sync.Mutex
+	mutex            sync.RWMutex
 	connections      []*connection
 	invalidEndpoints []*protoCommon.Endpoint
 }
@@ -88,8 +88,8 @@ func (con *connection) update(ctx context.Context) error {
 // first connection is the best based on criteria
 // if it returns an error try the next connection
 func (cc *connectionCache) processRequest(ctx context.Context, request *commonHttp.Request) (*commonHttp.Response, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
+	cc.mutex.RLock()
+	defer cc.mutex.RUnlock()
 
 	for _, connection := range cc.connections {
 		res, err := connection.communicator.ProcessRequest(ctx, request)
