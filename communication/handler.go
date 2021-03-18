@@ -65,5 +65,3 @@ func (handler *LoadBalancerHandler) SetStorageEndpoints(ctx context.Context, end
 
 	return &protoCommon.Empty{}, nil
 }
-
-

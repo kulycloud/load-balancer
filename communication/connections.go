@@ -58,7 +58,6 @@ type connectionCache struct {
 type connection struct {
 	endpoint     *protoCommon.Endpoint
 	communicator *commonHttp.Communicator
-	responseTime int64
 }
 
 // create valid connection if possible
@@ -71,19 +70,15 @@ func newConnection(ctx context.Context, endpoint *protoCommon.Endpoint) (*connec
 		endpoint:     endpoint,
 		communicator: com,
 	}
-	err = connection.update(ctx)
-	return connection, err
+	return connection, nil
 }
 
 // update evaluation criteria values (e.g. response time)
 func (con *connection) update(ctx context.Context) error {
-	start := time.Now()
-	err := con.communicator.Ping(ctx)
-	duration := (int64)(time.Since(start))
-	con.responseTime = duration
-	return err
+	return con.communicator.Ping(ctx)
 }
 
+// update the connection metrics by which the connections will be sorted
 // loop over valid connections and try to process request
 // first connection is the best based on criteria
 // if it returns an error try the next connection
@@ -183,5 +178,6 @@ func (cc *connectionCache) Swap(i, j int) {
 	cc.connections[i], cc.connections[j] = cc.connections[j], cc.connections[i]
 }
 func (cc *connectionCache) Less(i, j int) bool {
-	return cc.connections[i].responseTime < cc.connections[j].responseTime
+	// could optionally also consider other metrics but lru should suffice
+	return cc.connections[i].communicator.GetMetrics().LastUseTS < cc.connections[j].communicator.GetMetrics().LastUseTS
 }
