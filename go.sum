@@ -56,12 +56,16 @@ github.com/kulycloud/common v0.0.0-20210317192529-65d5287353ce h1:HuQx+0WfQ/YurH
 github.com/kulycloud/common v0.0.0-20210317192529-65d5287353ce/go.mod h1:E+Su9D6lW+QA0FsQF+kuHpnU9ySnjMD7JCzMXDq0efI=
 github.com/kulycloud/common v0.0.0-20210318130556-f4eb2a8f6f0f h1:3EzFhF8fUH3zI2CBixYcOUfazLLn40cfBPCF/VZqI/Q=
 github.com/kulycloud/common v0.0.0-20210318130556-f4eb2a8f6f0f/go.mod h1:E+Su9D6lW+QA0FsQF+kuHpnU9ySnjMD7JCzMXDq0efI=
+github.com/kulycloud/common v0.0.0-20210323100819-93d825d597b5 h1:jrwP7ue7waGFNwRSKf2oDbxzLw0L9va0L7PCLtWWgvE=
+github.com/kulycloud/common v0.0.0-20210323100819-93d825d597b5/go.mod h1:BGyUyF3p9c/ZBtWA/kNPp0MxV6pC84oJwYxqL6zoQ2k=
 github.com/kulycloud/protocol v0.0.0-20210303190205-727e9c8daa90 h1:0W/N3YULxYxH8uQF9DTQIqIfPsRuezIfLKK2uuSQmfo=
 github.com/kulycloud/protocol v0.0.0-20210303190205-727e9c8daa90/go.mod h1:0ew/OZBNjY27vlfb0xrgaTDp/3A5SM6SepXtWUAd8YY=
 github.com/kulycloud/protocol v0.0.0-20210317180715-ff3830aafecd h1:ItS0FRgk8dPwS8WZrt68WuOh1ZKr8hSPVdlWZ5aRRSg=
 github.com/kulycloud/protocol v0.0.0-20210317180715-ff3830aafecd/go.mod h1:0ew/OZBNjY27vlfb0xrgaTDp/3A5SM6SepXtWUAd8YY=
 github.com/kulycloud/protocol v0.0.0-20210317200650-299de70160ef h1:QTUqtJDuS1mk/tMzAoSdSWaH9xqvj2kBH68erusIqBY=
 github.com/kulycloud/protocol v0.0.0-20210317200650-299de70160ef/go.mod h1:0ew/OZBNjY27vlfb0xrgaTDp/3A5SM6SepXtWUAd8YY=
+github.com/kulycloud/protocol v0.0.0-20210323100304-4caa455444f5 h1:0XR6DQMjHodqrpnKNivH7dmE5pjqhma7HCI0gvP95WU=
+github.com/kulycloud/protocol v0.0.0-20210323100304-4caa455444f5/go.mod h1:0ew/OZBNjY27vlfb0xrgaTDp/3A5SM6SepXtWUAd8YY=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

@@ -62,7 +62,7 @@ type connection struct {
 
 // create valid connection if possible
 func newConnection(ctx context.Context, endpoint *protoCommon.Endpoint) (*connection, error) {
-	com, err := commonHttp.NewCommunicatorFromEndpoint(ctx, endpoint)
+	com, err := commonHttp.NewCommunicatorFromEndpoint(ctx, endpoint, true)
 	if err != nil {
 		return nil, err
 	}
